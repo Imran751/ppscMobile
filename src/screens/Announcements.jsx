@@ -1,58 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase'; // Assuming you have firebase config set up
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Clipboard } from 'react-native';
 
-const AnnouncementsScreen = () => {
-  const [announcements, setAnnouncements] = useState([]);
+const DeveloperIntroScreen = () => {
+  const jazzCashNumber = '03006509123'; // Replace with your JazzCash number
 
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        // Fetching announcements from Firestore
-        const querySnapshot = await getDocs(collection(db, 'announcements'));
-        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAnnouncements(data);
-      } catch (error) {
-        console.error("Error fetching announcements: ", error);
-        Alert.alert('Error', 'Failed to fetch announcements');
-      }
-    };
-
-    fetchAnnouncements();
-  }, []);
-
-  const renderItem = ({ item, index }) => {
-    console.log('Rendering item:', item); // Log each item being rendered
-    return (
-      <View style={styles.announcementContainer}>
-        <Text style={styles.announcementTitle}>
-          {index + 1}. {item.title}
-        </Text>
-        <Text style={styles.announcementDate}>{item.date}</Text>
-        <TouchableOpacity
-          style={styles.readMoreButton}
-          onPress={() => Alert.alert('Announcement Details', item.content)}>
-          <Text style={styles.readMoreText}>Read More</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  const handleCopy = () => {
+    Clipboard.setString(jazzCashNumber);
+    alert('JazzCash number copied to clipboard!'); // Alert the user that the number is copied
   };
-  
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Announcements</Text>
-      {announcements.length > 0 ? (
-        <FlatList
-          data={announcements}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
-        <Text style={styles.noAnnouncementsText}>No announcements available.</Text>
-      )}
+      <Text style={styles.header}>Show Some Love!</Text>
+      <Text style={styles.message}>Enjoying the app? Help fuel my creativity with a JazzCash boost!</Text>
+
+      <Text style={styles.jazzCashNumber}>{jazzCashNumber}</Text>
+
+      <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
+        <Text style={styles.copyButtonText}>Copy My JazzCash Number</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.instructions}>
+        Open your JazzCash app and send me a little something to keep the magic going. 🪄✨
+      </Text>
     </View>
   );
 };
@@ -63,45 +33,44 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F7FA',
     paddingTop: 20,
     paddingHorizontal: 15,
+    alignItems: 'center',
+    marginTop: 20,
   },
   header: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 10,
+  },
+  message: {
+    fontSize: 16,
+    color: '#7F8C8D',
+    textAlign: 'center',
     marginBottom: 20,
   },
-  announcementContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  announcementTitle: {
-    fontSize: 22,
-    fontWeight: '600',
+  jazzCashNumber: {
+    fontSize: 24,
     color: '#2C3E50',
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
-  readMoreButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#3498DB',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+  copyButton: {
+    backgroundColor: '#1E90FF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginBottom: 20,
   },
-  readMoreText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  noAnnouncementsText: {
+  copyButtonText: {
     fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  instructions: {
+    fontSize: 16,
     color: '#7F8C8D',
     textAlign: 'center',
   },
 });
 
-export default AnnouncementsScreen;
+export default DeveloperIntroScreen;
