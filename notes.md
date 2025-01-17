@@ -16,3 +16,4 @@ git merge <branch-name>
 git stash (Save uncommitted changes temporarily)
 git stash pop (Restore saved changes)
 
+(in directory) node uploadQuizData.js
