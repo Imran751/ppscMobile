@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView, Alert } from 'react-native';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const QuizScreen = () => {
   const [questions, setQuestions] = useState([]);
@@ -8,8 +10,6 @@ const QuizScreen = () => {
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const dataUrl = 'https://raw.githubusercontent.com/Imran751/courseWebsite/8b85b9b62e935ba9634851c593491f77c58ef39e/data.json';
-
   useEffect(() => {
     fetchQuestions();
   }, []);
@@ -17,15 +17,17 @@ const QuizScreen = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const response = await fetch(dataUrl);
-      const jsonData = await response.json();
-
-      // Shuffle and take the first 20 questions
-      const shuffledQuestions = shuffleArray(jsonData).slice(0, 50);
+      const querySnapshot = await getDocs(collection(db, "quizzes"));
+      const fetchedQuestions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      
+      const shuffledQuestions = shuffleArray(fetchedQuestions).slice(0, 20);
       setQuestions(shuffledQuestions);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching questions:", error);
-    } finally {
       setLoading(false);
     }
   };
@@ -106,7 +108,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    marginTop: 20,
+    marginTop:20,
     backgroundColor: '#F3F4F6',
   },
   loadingContainer: {
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 18,
-    marginTop: 50,
+    marginTop:50,
     marginVertical: 15,
   },
   optionButton: {

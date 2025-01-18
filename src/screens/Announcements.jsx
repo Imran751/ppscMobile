@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Clipboard, FlatList, Alert } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase'; // Assuming you have firebase config set up
 
 const DeveloperAndAnnouncementsScreen = () => {
   const [announcements, setAnnouncements] = useState([]);
+  const [expandedAnnouncement, setExpandedAnnouncement] = useState(null); // Track expanded announcement
   const jazzCashNumber = '03006509123'; // Replace with your JazzCash number
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        // Fetching announcements from Firestore
-        const querySnapshot = await getDocs(collection(db, 'announcements'));
-        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const response = await fetch('https://raw.githubusercontent.com/Imran751/courseWebsite/624d49c77a2c529915fc25f080b017b1de62cc00/announcements.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
         setAnnouncements(data);
       } catch (error) {
         console.error("Error fetching announcements: ", error);
@@ -28,17 +29,26 @@ const DeveloperAndAnnouncementsScreen = () => {
     alert('JazzCash number copied to clipboard!');
   };
 
+  const toggleExpand = (id) => {
+    setExpandedAnnouncement(expandedAnnouncement === id ? null : id); // Toggle expanded announcement
+  };
+
   const renderItem = ({ item, index }) => {
+    const isExpanded = expandedAnnouncement === item.id; // Check if this announcement is expanded
+
     return (
       <View style={styles.announcementContainer}>
         <Text style={styles.announcementTitle}>
           {index + 1}. {item.title}
         </Text>
         <Text style={styles.announcementDate}>{item.date}</Text>
+        <Text style={styles.announcementContent}>
+          {isExpanded ? item.content : item.content.slice(0, 50) + '...'} {/* Show full content or truncated version */}
+        </Text>
         <TouchableOpacity
           style={styles.readMoreButton}
-          onPress={() => Alert.alert('Announcement Details', item.content)}>
-          <Text style={styles.readMoreText}>Read More</Text>
+          onPress={() => toggleExpand(item.id)}>
+          <Text style={styles.readMoreText}>{isExpanded ? 'Show Less' : 'Read More'}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -92,16 +102,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#333',
     marginBottom: 15,
+    letterSpacing: 0.5,
   },
   announcementsHeader: {
     marginTop: 30,
     marginBottom: 20,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333',
   },
   message: {
     fontSize: 18,
     color: '#7F8C8D',
     textAlign: 'center',
     marginBottom: 20,
+    lineHeight: 24,
   },
   jazzCashNumber: {
     fontSize: 28,
@@ -135,43 +150,52 @@ const styles = StyleSheet.create({
   announcementContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
     borderLeftWidth: 5,
     borderLeftColor: '#3498DB',
-   },
-   announcementTitle:{
-     fontSize :20 ,
-     fontWeight :'600' ,
-     color :'#2C3E50' ,
-     marginBottom :8 ,
-   },
-   announcementDate:{
-     fontSize :14 ,
-     color :'#95A5A6' ,
-     marginBottom :12 ,
-   },
-   readMoreButton:{
-     alignSelf :'flex-start' ,
-     backgroundColor :'#3498DB' ,
-     paddingVertical :8 ,
-     paddingHorizontal :15 ,
-     borderRadius :5 ,
-   },
-   readMoreText:{
-     fontSize :16 ,
-     color :'#FFFFFF' ,
-   },
-   noAnnouncementsText:{
-     fontSize :18 ,
-     color :'#7F8C8D' ,
-     textAlign :'center' ,
-   }
+    marginHorizontal: 10,
+  },
+  announcementTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2C3E50',
+    marginBottom: 10,
+  },
+  announcementDate: {
+    fontSize: 14,
+    color: '#95A5A6',
+    marginBottom: 10,
+  },
+  announcementContent: {
+    fontSize: 16,
+    color: '#7F8C8D',
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  readMoreButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#3498DB',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  readMoreText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  noAnnouncementsText: {
+    fontSize: 18,
+    color: '#7F8C8D',
+    textAlign: 'center',
+    marginTop: 20,
+  },
 });
 
 export default DeveloperAndAnnouncementsScreen;

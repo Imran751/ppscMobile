@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Alert, TouchableOpacity, StyleSheet } from 'react-native';
-import { db } from '../firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
 import SearchBar from './SearchBar';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,31 +18,61 @@ const QuestionsCard = () => {
 
   const categories = ['All', 'General Knowledge', 'Pakistan Affairs', 'Islamic Studies', 'Current Affairs', 'Geography', 'Mathematics', 'English Grammar', 'Urdu', 'Everyday Science', 'Computer Skills', 'Extra'];
 
+
+
+  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        let quizQuery = collection(db, 'quizzes');
-
-        if (selectedCategory !== 'All') {
-          quizQuery = query(quizQuery, where('category', '==', selectedCategory));
+        // Check for cached data in AsyncStorage
+        const cachedData = await AsyncStorage.getItem('cachedQuestions');
+        if (cachedData) {
+          const { data, timestamp } = JSON.parse(cachedData);
+  
+          // Check if cached data is still valid
+          const now = new Date().getTime();
+          if (now - timestamp < CACHE_DURATION) {
+            // Use cached data if not expired
+            const filteredData = selectedCategory === 'All'
+              ? data
+              : data.filter((item) => item.category === selectedCategory);
+  
+            setQuestions(filteredData);
+            return; // Exit early if using cache
+          }
         }
-
-        const quizSnapshot = await getDocs(quizQuery);
-        const quizData = quizSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setQuestions(quizData);
-
-        const savedStatus = JSON.parse(await AsyncStorage.getItem('doneStatus')) || {};
-        setDoneStatus(savedStatus);
+  
+        // If no valid cache, fetch from remote URL
+        const url = 'https://raw.githubusercontent.com/Imran751/courseWebsite/8b85b9b62e935ba9634851c593491f77c58ef39e/data.json';
+        const response = await fetch(url);
+        const data = await response.json();
+  
+        // Filter and set data
+        const filteredData = selectedCategory === 'All'
+          ? data
+          : data.filter((item) => item.category === selectedCategory);
+  
+        setQuestions(filteredData);
+  
+        // Save fetched data with timestamp to AsyncStorage
+        const cachedObject = {
+          data,
+          timestamp: new Date().getTime(),
+        };
+        await AsyncStorage.setItem('cachedQuestions', JSON.stringify(cachedObject));
+  
+        // Optionally clear old data
+        await AsyncStorage.removeItem('doneStatus');
       } catch (error) {
         console.error('Error fetching quiz data:', error);
       }
     };
-
+  
     fetchQuestions();
   }, [selectedCategory]);
+  
+
 
   const filteredQuestions = questions.filter((question) => {
     return question.question.toLowerCase().includes(searchTerm.toLowerCase());
@@ -63,13 +91,13 @@ const QuestionsCard = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TopBar  />
+      <TopBar />
       <SubjectCategories
         categories={categories}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
       />
-      
+
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
       <View style={styles.questionsContainer}>
@@ -97,32 +125,31 @@ const QuestionsCard = () => {
             </Text>
 
             <View style={styles.buttonContainer}>
-  <TouchableOpacity
-    style={[styles.optionButton, styles.showAnswerButton]}  // Add unique style for "Show Answer"
-    onPress={() => setShowAnswerIndex(showAnswerIndex === index ? null : index)}
-  >
-    <Text style={styles.optionButtonText}>
-      {showAnswerIndex === index ? 'Hide Answer' : 'Show Answer'}
-    </Text>
-  </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.optionButton, styles.showAnswerButton]}
+                onPress={() => setShowAnswerIndex(showAnswerIndex === index ? null : index)}
+              >
+                <Text style={styles.optionButtonText}>
+                  {showAnswerIndex === index ? 'Hide Answer' : 'Show Answer'}
+                </Text>
+              </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[styles.optionButton, styles.showOptionsButton]}  // Add unique style for "Show Options"
-    onPress={() => setShowOptionsIndex(showOptionsIndex === index ? null : index)}
-  >
-    <Text style={styles.optionButtonText}>
-      {showOptionsIndex === index ? 'Hide Options' : 'Show Options'}
-    </Text>
-  </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.optionButton, styles.showOptionsButton]}
+                onPress={() => setShowOptionsIndex(showOptionsIndex === index ? null : index)}
+              >
+                <Text style={styles.optionButtonText}>
+                  {showOptionsIndex === index ? 'Hide Options' : 'Show Options'}
+                </Text>
+              </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[styles.optionButton, styles.detailsButton]}  // Add unique style for "Details"
-    onPress={() => navigation.navigate('QuestionDetail', { question })}
-  >
-    <Text style={styles.optionButtonText}>Details</Text>
-  </TouchableOpacity>
-</View>
-
+              <TouchableOpacity
+                style={[styles.optionButton, styles.detailsButton]}
+                onPress={() => navigation.navigate('QuestionDetail', { question })}
+              >
+                <Text style={styles.optionButtonText}>Details</Text>
+              </TouchableOpacity>
+            </View>
 
             {showAnswerIndex === index && <Text style={styles.answerText}>Answer: {question.answer}</Text>}
             {showOptionsIndex === index && (
@@ -149,6 +176,7 @@ const QuestionsCard = () => {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
