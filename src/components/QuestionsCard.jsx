@@ -20,13 +20,20 @@ const QuestionsCard = () => {
 
   const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   
+  // Use useEffect to fetch questions and load category from AsyncStorage
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        // Retrieve done status from AsyncStorage
+        // Retrieve done status and selected category from AsyncStorage
         const savedDoneStatus = await AsyncStorage.getItem('doneStatus');
+        const savedCategory = await AsyncStorage.getItem('selectedCategory');
+        
         if (savedDoneStatus) {
           setDoneStatus(JSON.parse(savedDoneStatus));
+        }
+        
+        if (savedCategory) {
+          setSelectedCategory(savedCategory);
         }
 
         // Check for cached data in AsyncStorage
@@ -72,16 +79,22 @@ const QuestionsCard = () => {
         console.error('Error fetching quiz data:', error);
       }
     };
-  
+
     fetchQuestions();
   }, [selectedCategory]);
+
+  // Update the selected category in AsyncStorage whenever it changes
+  const handleCategoryChange = async (category) => {
+    setSelectedCategory(category);
+    await AsyncStorage.setItem('selectedCategory', category); // Save to AsyncStorage
+  };
 
   const filteredQuestions = questions.filter((question) => {
     return question.question.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const handleOptionClick = (option, answer) => {
-    Alert.alert(option === answer ? 'Congratulations!' : "It's wrong");
+    Alert.alert(option === answer ? 'Well done! You got it right!' : "Oops! Not quite right. Try again!");
   };
 
   const toggleDoneStatus = async (id) => {
@@ -97,7 +110,7 @@ const QuestionsCard = () => {
       <SubjectCategories
         categories={categories}
         selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
+        setSelectedCategory={handleCategoryChange} // Pass the updated handler
       />
       
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -107,10 +120,7 @@ const QuestionsCard = () => {
           <View key={question.id} style={styles.questionCard}>
             <TouchableOpacity
               onPress={() => toggleDoneStatus(question.id)}
-              style={[
-                styles.doneButton,
-                doneStatus[question.id] ? styles.doneActive : styles.doneInactive,
-              ]}
+              style={[styles.doneButton, doneStatus[question.id] ? styles.doneActive : styles.doneInactive]}
             >
               <MaterialCommunityIcons
                 name={doneStatus[question.id] ? 'check-circle' : 'circle'}
@@ -178,6 +188,7 @@ const QuestionsCard = () => {
     </ScrollView>
   );
 };
+
 
 
 
