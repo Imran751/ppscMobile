@@ -17,3 +17,5 @@ git stash (Save uncommitted changes temporarily)
 git stash pop (Restore saved changes)
 
 (in directory) node uploadQuizData.js
+https://github.com/Imran751/courseWebsite/blob/8b85b9b62e935ba9634851c593491f77c58ef39e/data.json
+

@@ -18,13 +18,17 @@ const QuestionsCard = () => {
 
   const categories = ['All', 'General Knowledge', 'Pakistan Affairs', 'Islamic Studies', 'Current Affairs', 'Geography', 'Mathematics', 'English Grammar', 'Urdu', 'Everyday Science', 'Computer Skills', 'Extra'];
 
-
-
   const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
+        // Retrieve done status from AsyncStorage
+        const savedDoneStatus = await AsyncStorage.getItem('doneStatus');
+        if (savedDoneStatus) {
+          setDoneStatus(JSON.parse(savedDoneStatus));
+        }
+
         // Check for cached data in AsyncStorage
         const cachedData = await AsyncStorage.getItem('cachedQuestions');
         if (cachedData) {
@@ -71,8 +75,6 @@ const QuestionsCard = () => {
   
     fetchQuestions();
   }, [selectedCategory]);
-  
-
 
   const filteredQuestions = questions.filter((question) => {
     return question.question.toLowerCase().includes(searchTerm.toLowerCase());
@@ -97,7 +99,7 @@ const QuestionsCard = () => {
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
       />
-
+      
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
       <View style={styles.questionsContainer}>
@@ -176,6 +178,7 @@ const QuestionsCard = () => {
     </ScrollView>
   );
 };
+
 
 
 const styles = StyleSheet.create({
