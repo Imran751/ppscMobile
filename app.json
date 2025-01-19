@@ -19,10 +19,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon1.png",
         "backgroundColor": "#60A5FA"
-      }
+      },
+      "package": "com.muhammadimran.ppscMobile"
     },
     "web": {
       "favicon": "./assets/favicon1.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "78a4c968-017b-47df-8a58-97ef61adedd2"
+      }
     }
   }
 }
